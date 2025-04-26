@@ -1,2 +1,2 @@
-# AqyldyShop
+# Tizim
 Project for nFactorial Incubator

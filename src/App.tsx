@@ -12,10 +12,10 @@ function App() {
 
   //Load list from local storage at the start
   useEffect(() => {
-    const storedItems = localStorage.getItem("shoppingList")
-    if (storedItems) {
-      setItems(JSON.parse(storedItems))
-    }
+    fetch('http://localhost:3001/items')
+      .then(res => res.json())
+      .then(data => setItems(data))
+      .catch(err => console.error("Failed to load the list: ", err))
   }, [])
 
   // Save the list after each edit
@@ -26,19 +26,51 @@ function App() {
 
   const addItem = () => {
     if (input.trim() === "") return
-    setItems([...items, { name: input, bought: false }])
-    setInput("")
+
+    fetch('http://localhost:3001/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: input })
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("Failed to add item")
+        }
+        return res.json()
+      })
+      .then(() => {
+        setItems([...items, { name: input, bought: false }])
+        setInput("")
+      })
+      .catch(err => console.error(err))
   }
 
   const toggleBought = (index: number) => {
-    const newItems = [...items]
-    newItems[index].bought = !newItems[index].bought
-    setItems(newItems)
+    fetch(`http://localhost:3001/items/${index}`, {
+      method: 'PATCH'
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to update item')
+        }
+        const newItems = [...items]
+        newItems[index].bought = !newItems[index].bought
+        setItems(newItems)
+      })
+      .catch(err => console.error(err))
   }
 
   const deleteItem = (index: number) => {
-    const newItems = items.filter((_, i) => i != index)
-    setItems(newItems)
+    fetch(`http://localhost:3001/items/${index}`, {
+      method: 'DELETE'
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("Failed to delete item")
+        }
+        const newItems = items.filter((_, i) => i !== index)
+        setItems(newItems)
+      })
   }
 
   return (
